@@ -1,0 +1,25 @@
+trimesh
+opencv-python
+omegaconf
+plyfile
+pyhocon==0.3.59
+nerfacc==0.3.3
+# "pyglet<2" pip install pyglet<2
+tqdm
+scikit-image
+matplotlib
+opencv-python
+tensorboard
+numpy
+pyrender
+open3d
+cython
+scipy
+shapely
+timm
+h5py # omni prior requires this
+submitit
+huggingface_hub
+gradio_imageslider
+gradio
+git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/torch

@@ -1,0 +1,71 @@
+{
+    'camera_model': 'OPENCV', # camera model (currently only OpenCV is supported)
+    'height': 384, # height of the images
+    'width': 384, # width of the images
+    'has_mono_prior': true, # use monocular cues or not
+    'pairs': 'pairs.txt', # pairs file used for multi-view photometric consistency loss
+    'worldtogt': [
+        [1, 0, 0, 0], # world to gt transformation (useful for evauation)
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+      ],
+    'scene_box': {
+        'aabb': [
+            [-1, -1, -1], # aabb for the bbox
+            [1, 1, 1],
+          ],
+        'near': 0.5, # near plane for each image
+        'far': 4.5, # far plane for each image
+        'radius': 1.0, # radius of ROI region in scene
+        'collider_type': 'near_far',
+        # collider_type can be "near_far", "box", "sphere",
+        # it indicates how do we determine the near and far for each ray
+        # 1. near_far means we use the same near and far value for each ray
+        # 2. box means we compute the intersection with the bounding box
+        # 3. sphere means we compute the intersection with the sphere
+      },
+    'frames': [ # this contains information for each image
+        {
+          # note that all paths are relateive path
+          # path of rgb image
+          'rgb_path': '000000_rgb.png',
+          # camera to world transform
+          'camtoworld':
+            [
+              [
+                0.9702627062797546,
+                -0.014742869883775711,
+                -0.2416049987077713,
+                0.6601868867874146,
+              ],
+              [
+                0.007479910273104906,
+                0.9994929432868958,
+                -0.03095100075006485,
+                0.07803472131490707,
+              ],
+              [
+                0.2419387847185135,
+                0.028223417699337006,
+                0.9698809385299683,
+                -2.6397712230682373,
+              ],
+              [0.0, 0.0, 0.0, 1.0],
+            ],
+          # intrinsic of current image
+          'intrinsics':
+            [
+              [925.5457763671875, -7.8512319305446e-05, 199.4256591796875, 0.0],
+              [0.0, 922.6160278320312, 198.10269165039062, 0.0],
+              [0.0, 0.0, 1.0, 0.0],
+              [0.0, 0.0, 0.0, 1.0],
+            ],
+          # path of monocular depth prior
+          'mono_depth_path': '000000_depth.npy',
+          # path of monocular normal prior
+          'mono_normal_path': '000000_normal.npy',
+        },
+        ...,
+      ],
+  }
