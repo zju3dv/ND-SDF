@@ -6,6 +6,7 @@ ND-SDF: Learning Normal Deflection Fields for High-Fidelity Indoor Reconstructio
 > ND-SDF: Learning Normal Deflection Fields for High-Fidelity Indoor Reconstruction
 
 > Ziyu Tang, [Weicai Ye](https://ywcmaike.github.io/), Yifan Wang, Di Huang, Hujun Bao, Tong He, Guofeng Zhang
+
 > ICLR 2025, Spotlight
 
 ![demo_vid](assets/teaser.png)
