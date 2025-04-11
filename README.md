@@ -9,6 +9,7 @@ ND-SDF: Learning Normal Deflection Fields for High-Fidelity Indoor Reconstructio
 
 > ICLR 2025, **Spotlight**
 
+
 ![demo_vid](assets/teaser2.png)
 
 ## Demo
