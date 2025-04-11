@@ -163,7 +163,7 @@ class ImplicitReconSystem(torch.nn.Module):
                 # 1. confidence guiding unbias
                 denom = denom * confidence + 1. * (1 - confidence)
                 def two_steps_warm_up(prog):
-                    two_steps = [self.anneal_quat_end, min(self.anneal_quat_end+0.3, 1)]  # two_steps[0]-two_steps[1]: 0-1
+                    two_steps = [self.anneal_quat_end, max(self.anneal_quat_end, 0.5)]  # two_steps[0]-two_steps[1]: 0-1
                     if prog < two_steps[0]:
                         return 0
                     elif prog < two_steps[1]:
@@ -396,9 +396,11 @@ class ImplicitReconSystem(torch.nn.Module):
                 output['quat'] = torch.zeros(B, R, 4, device=rays_o.device)
                 output['normal_w'] = torch.zeros(B, R, 3, device=rays_o.device)
                 output['biased_normal_w'] = torch.zeros(B, R, 3, device=rays_o.device)
+                output['angle'] = torch.zeros(B, R, 1, device=rays_o.device)
                 if not self.training:
                     output['biased_normal'] = torch.zeros(B, R, 3, device=rays_o.device)
                     output['biased_mono_normal'] = torch.zeros(B, R, 3, device=rays_o.device)
+            output['ray_occ_false'] = True
             return output
         # get all sample points from ray-marching occ, and get sdf、rgbs
         t_mid = (t_starts + t_ends) / 2.0
@@ -564,8 +566,9 @@ class ImplicitReconSystem(torch.nn.Module):
         with torch.no_grad():
             inverse_r = sample_dists(ray_size=(B, R), dist_range=(1, 0), intvs=self.sampler.N_samples_bg,stratified=self.training)  # (B, R, N_samples_bg, 1)
         if far is None:
-            _, far, outside = near_far_from_cube(rays_o, rays_d, bound=self.bound)
+            _, far, outside = near_far_from_sphere(rays_o, rays_d, bound=self.bound)
             far[outside] = self.bound
+            far[far < 0] = 1e-6 # 保证far>0
             far = far.reshape(B, R, 1, 1)
         z_bg = far / (inverse_r + 1e-6)  # (B, R, N_samples_bg, 1)
         points_bg = rays_o[:, :, None, :] + rays_d[:, :, None, :] * z_bg  # (B, R, N_samples_bg, 3)
@@ -585,6 +588,7 @@ class ImplicitReconSystem(torch.nn.Module):
         densities_bg, rgbs_bg = self.bg_nerf(points_bg, rays_d[:, :, None, :].tile(1, 1, self.sampler.N_samples_bg, 1), rays_o[:, :, None, :].tile(1, 1, self.sampler.N_samples_bg, 1), app_bg)
         alphas_bg = volume_rendering_alphas(densities=densities_bg, dists=z_bg)  # 不透明度, 为了方便合并object和bg的结果, 我们使用基于alpha、T的离散体渲染。
         weights_bg = alpha_compositing_weights(alphas_bg)
+        weights_bg = weights_bg / (weights_bg.sum(dim=-2, keepdim=True) + 1e-6)  # 归一化
         rgb_bg = composite(rgbs_bg, weights_bg)
         opacity_bg = composite(1, weights_bg)
         dist_bg = composite(z_bg, weights_bg)
@@ -596,6 +600,21 @@ class ImplicitReconSystem(torch.nn.Module):
         output_bg['depth'] = depth_bg
         output_bg['opacity'] = opacity_bg
         output_bg['num_samples'] = R * self.sampler.N_samples_bg
+
+        if output_bg['rgb'].isnan().any():
+            # 将nan值的rgb置为0
+            # nan_position = torch.any(output_bg['rgb'].isnan(), dim=-1)[..., None]
+            # nan_densities = densities_bg.permute(0, 1, 3, 2)[nan_position]
+            # nan_rgb = rgbs_bg.permute(0, 1, 3, 2)[nan_position.repeat(1, 1, 3)].reshape(-1, 3, 32).permute(0, 2, 1)
+            # nan_alphas = alphas_bg[nan_position[..., 0]]
+            # nan_weights = weights_bg.permute(0, 1, 3, 2)[nan_position]
+            # nan_opacities = opacity_bg[nan_position]
+            # nan_dist = dist_bg[nan_position]
+            # nan_inverse_r = inverse_r.permute(0, 1, 3, 2)[nan_position]
+            # nan_points = points_bg.permute(0, 1, 3, 2)[nan_position.repeat(1, 1, 3)].reshape(-1, 3, 32).permute(0, 2, 1)
+            # nan_z = z_bg.permute(0, 1, 3, 2)[nan_position]
+            # print(1)
+            raise ValueError('rgb has nan value')
         return output_bg
 
     def forward_bg_occ(self, sample):

@@ -16,7 +16,7 @@ import glob
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str, default='/data/scannetpp')
-    parser.add_argument('--meshes_dir', type=str, default='/data/projects/implicit_reconstruction/scripts')
+    parser.add_argument('--meshes_dir', type=str, default='/home/dawn/projects/ND-SDF/scripts')
     args = parser.parse_args()
 
     meshes_dir = args.meshes_dir

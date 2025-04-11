@@ -40,8 +40,8 @@ def load_K_Rt_from_P(filename, P=None):
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--data_dir', type=str,default='/data/angelo/dtu')
-parser.add_argument('--id',type=str,default='122')
+parser.add_argument('--data_dir', type=str,default='/data/angelo/dtu_halfres')
+parser.add_argument('--id',type=str,default='69')
 parser.add_argument("--output_path", type=str, default='', help="path to output")
 parser.add_argument("--h",  type=int, default=600, help="resize height")
 parser.add_argument("--w",  type=int, default=800, help="resize width")
@@ -69,7 +69,7 @@ trans = transforms.Compose(
     ]
 )
 
-input_path = os.path.join(args.data_dir, f'scene{args.id}')
+input_path = os.path.join(args.data_dir, f'scan{args.id}')
 output_path = args.output_path if args.output_path else input_path
 os.makedirs(output_path, exist_ok=True)
 
@@ -145,6 +145,7 @@ for idx, (pose, image_path) in tqdm.tqdm(enumerate(zip(poses, color_paths)),tota
         "mono_normal_path": os.path.join("mono_normal", 'res', filename[:-4]+ ".npy"),
         # "sensor_depth_path": rgb_path.replace("_rgb.png", "_sensor_depth.npy"),
         "mask_path": os.path.join("mask", 'res', filename[:-4]+ ".npy"),
+        "foreground_mask": os.path.join("mask", filename[-7:-4] + ".png"), # 用来评估时cull scan
         "uncertainty_path": os.path.join("uncertainty", 'res', filename[:-4]+ ".npy"),
     }
 

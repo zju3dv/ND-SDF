@@ -1,3 +1,4 @@
+import copy
 import shutil
 
 import open3d as o3d
@@ -28,7 +29,7 @@ def get_poses(data_dir):
     scale_mat = np.array(data["worldtogt"], dtype=np.float32)
     return np.array(poses),scale_mat, np.array(intrinsics), data["width"], data["height"]
 
-def save_images(vis, mesh, mesh_name, save_count, color_dir='./select/color', normal_dir='./select/normal'):
+def save_images(vis, mesh, mesh_name, save_count, color_dir='./select/color', normal_dir='./select/normal', textured=False):
     os.makedirs(color_dir, exist_ok=True)
     os.makedirs(normal_dir, exist_ok=True)
     global camera_params
@@ -40,16 +41,17 @@ def save_images(vis, mesh, mesh_name, save_count, color_dir='./select/color', no
     view_control.convert_from_pinhole_camera_parameters(camera_params, allow_arbitrary=True)
 
     # 渲染法线图像
-    vis.get_render_option().mesh_color_option = o3d.visualization.MeshColorOption.Normal
-    normal_image_path = os.path.join(normal_dir, f'{mesh_name}_normal{save_count:04d}.png')
-    vis.capture_screen_image(normal_image_path, True)
+    if not textured: # 有纹理的mesh不需要法线图像
+        vis.get_render_option().mesh_color_option = o3d.visualization.MeshColorOption.Normal
+        normal_image_path = os.path.join(normal_dir, f'{mesh_name}_normal{save_count:04d}.png')
+        vis.capture_screen_image(normal_image_path, True)
 
     # 渲染彩色图像
     vis.get_render_option().mesh_color_option = o3d.visualization.MeshColorOption.Color
     color_image_path = os.path.join(color_dir, f'{mesh_name}_color{save_count:04d}.png')
     vis.capture_screen_image(color_image_path, True)
 
-def visualize_mesh(main_mesh_idx, mesh_paths, meshes, width=1080, height=1080, images_dir = None):
+def visualize_mesh(main_mesh_idx, mesh_paths, meshes, width=1080, height=1080, images_dir = None, textured=False):
     global vis, camera_params, save_count, poses
     # 创建一个可视化窗口
     vis = o3d.visualization.VisualizerWithKeyCallback()
@@ -66,7 +68,7 @@ def visualize_mesh(main_mesh_idx, mesh_paths, meshes, width=1080, height=1080, i
     # vis.get_view_control().set_zoom(0.5)
 
     # 定义获取相机位姿和保存图像的回调函数
-    save_rendering = False
+    save_rendering = True
     def capture_camera_pose(vis):
         global camera_params, save_count,mode
         view_control = vis.get_view_control()
@@ -90,9 +92,11 @@ def visualize_mesh(main_mesh_idx, mesh_paths, meshes, width=1080, height=1080, i
         if save_rendering:
             cur_color_dir = os.path.join(save_rtdir, 'color', f'{save_idx}')
             cur_normal_dir = os.path.join(save_rtdir, 'normal', f'{save_idx}')
-            for mesh_path, mesh in zip(mesh_paths, meshes):
+            for i, (mesh_path, mesh) in enumerate(zip(mesh_paths, meshes)):
                 mesh_name = os.path.splitext(os.path.basename(mesh_path))[0]
-                save_images(vis, mesh, mesh_name, save_idx, cur_color_dir, cur_normal_dir)
+                if textured and i>=len(meshes)//2:
+                    mesh_name += '_textured'
+                save_images(vis, mesh, mesh_name, save_idx, cur_color_dir, cur_normal_dir, textured and i>=len(meshes)//2)
             # 保存当前视角的图像, 可省略。
             if images_dir is not None and mode=='view':
                 images = glob.glob(images_dir + '/*.png') + glob.glob(images_dir + '/*.jpg')
@@ -119,7 +123,9 @@ def visualize_mesh(main_mesh_idx, mesh_paths, meshes, width=1080, height=1080, i
             camera_params = view_control.convert_to_pinhole_camera_parameters()
             vis.clear_geometries()
             vis.add_geometry(meshes[main_mesh_idx])
-            view_control.convert_from_pinhole_camera_parameters(camera_params, allow_arbitrary=True)
+            view_control.convert_from_pinhole_camera_parameters(camera_params, allow_arbitrary=True) # newest open3d
+            # view_control.convert_from_pinhole_camera_parameters(camera_params)
+
 
     def change_view(vis, key):
         global view_poses, intrinsics,width,height
@@ -172,8 +178,8 @@ def visualize_mesh(main_mesh_idx, mesh_paths, meshes, width=1080, height=1080, i
 # ab11145646
 
 # ---------------------------------------------- #
-save_rtdir = '/data/ICLR/ND-SDF/Figures/scannetpp_rebuttal/03'
-mesh_paths = glob.glob('/data/ICLR/ND-SDF/Figures/scannetpp_rebuttal/03' + '/*.ply')
+save_rtdir = './teaser_scannetpp_1'
+mesh_paths = glob.glob('/data/projects/gaussian-opacity-fields/output/tnt4/test/ours_30000/fusion' + '/*.ply')
 mesh_paths.sort()
 # mesh_paths = ['/data/projects/implicit_reconstruction/runs_tnt3-5/tnt4_4_2048_latest.ply']
 
@@ -183,7 +189,8 @@ data_dir = '/data/scannetpp/036bce3393'
 width = 1920
 height = 1080
 gt_images_dir = None #'/mnt/xishu/ND-SDF/data/tankandtemples/advanced/Ballroom/images_raw'
-has_intrinsics = True
+has_intrinsics = False
+textured = False # 是否加载纹理
 # ---------------------------------------------- #
 intrinsics = None
 if (has_intrinsics and data_dir) or mode == 'view':
@@ -201,6 +208,7 @@ os.makedirs(os.path.join(save_rtdir, 'normal'), exist_ok=True)
 # 加载其他meshes
 # trimesh_meshes = [trimesh.load_mesh(path) for path in mesh_paths]
 meshes = [o3d.io.read_triangle_mesh(path) for path in mesh_paths if path]
+meshes_textured = []
 # 计算法线
 for i,mesh in enumerate(meshes):
     if gt_space and mode == 'view':
@@ -211,14 +219,20 @@ for i,mesh in enumerate(meshes):
         gt2world = np.linalg.inv(scale_mat)
         mesh.vertices = o3d.utility.Vector3dVector(np.asarray(mesh.vertices) @ gt2world[:3, :3].T + gt2world[:3, 3])
         # mesh.transform(np.linalg.inv(scale_mat))
+    if textured:
+        meshes_textured.append(copy.deepcopy(mesh))
     mesh.compute_vertex_normals()
     mesh.paint_uniform_color([1.0, 1.0, 1.0])
-
+if textured:
+    meshes.extend(meshes_textured)
+    mesh_paths.extend(mesh_paths)
 # 创建一个线程来运行可视化
 main_mesh_idx = 0
 for i, mesh_path in enumerate(mesh_paths):
+    if textured and i>=len(meshes)//2:
+        mesh_path = mesh_path.split('.')[0] + '_textured.ply'
     print(f"{i}: {mesh_path}")
-vis_thread = threading.Thread(target=visualize_mesh, args=(main_mesh_idx, mesh_paths, meshes, width, height, gt_images_dir))
+vis_thread = threading.Thread(target=visualize_mesh, args=(main_mesh_idx, mesh_paths, meshes, width, height, gt_images_dir, textured))
 vis_thread.start()
 
 # 等待可视化线程结束

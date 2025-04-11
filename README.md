@@ -7,11 +7,11 @@ ND-SDF: Learning Normal Deflection Fields for High-Fidelity Indoor Reconstructio
 
 > Ziyu Tang, [Weicai Ye](https://ywcmaike.github.io/), Yifan Wang, Di Huang, Hujun Bao, Tong He, Guofeng Zhang
 
-![demo_vid](assets/teaser.png)
+> ICLR 2025, **Spotlight**
+
+![demo_vid](assets/teaser2.png)
 
 ## Demo
-
-https://zju3dv.github.io/nd-sdf/static/videos/e0_notop_rgb.mp4
 
 See more results on the [project page](https://zju3dv.github.io/nd-sdf/).
 
@@ -33,7 +33,7 @@ pip install -r requirements.txt
 ```
 
 TODO List:
-- [ ] Light training config (512 or 1024 rays per batch): We do not use mlp for scene representation, since it inherently causes detail loss in complex scenes. With hashgrid as the scene primitive, we adopt sampling 4×1024 rays per batch as it's more stable especially when training on ScanNet, which suffers from motion blur heavily.
+- [x] Light training config (512 or 1024 rays per batch): We do not use mlp for scene representation, since it inherently causes detail loss in complex scenes. With hashgrid as the scene primitive, we adopt sampling 4×1024 rays per batch as it's more stable especially when training on ScanNet, which suffers from motion blur heavily.
 ## Dataset
 Our code is compatible with the data format of MonoSDF. We thank monosdf for providing the following indoor datasets: [ScanNet](https://s3.eu-central-1.amazonaws.com/avg-projects/monosdf/data/scannet.tar), [replica](https://s3.eu-central-1.amazonaws.com/avg-projects/monosdf/data/Replica.tar), and [Tanksandtemples](https://s3.eu-central-1.amazonaws.com/avg-projects/monosdf/data/tnt_advanced.tar). Click the blue hyperlinks to download the datasets with processed priors. After downloading, extract the files to the `data` folder in the root directory.
 
@@ -162,6 +162,7 @@ python extract_mono_cues_square.py --input_dir <custom_dataset_dir>/rgb --output
 ```bash
 python extract_mono_cues_square.py --input_dir <custom_dataset_dir>/rgb --output_dir <custom_dataset_dir> --task depth
 ```
+Before training, please set the `monosdf` flag to `False` in the `BaseDataset` class in `datasets/base_dataset.py`.
 Train on the custom dataset:
 ```bash
 torchrun --nproc_per_node=1 exp_runner.py --conf confs/custom.yaml --scan_id -1 --data_dir <custom_dataset_dir>

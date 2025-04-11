@@ -22,8 +22,8 @@ os.environ['PATH'] = ':'.join(env_list)
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('--conf', type=str, default='/data/projects/implicit_reconstruction/runspp_end1/scannetpp7-1-5_036bce3393_cues/2024-05-14_12-51-27/conf.yaml')
-    parser.add_argument('--checkpoint', type=str, default='/data/projects/implicit_reconstruction/runspp_end1/scannetpp7-1-5_036bce3393_cues/2024-05-14_12-51-27/checkpoints/latest.pth')
+    parser.add_argument('--conf', type=str, default='/home/dawn/projects/ND-SDF/runs_pp_biasprior/scannetpp_degree_60_0e75f3c4d9_re/2024-11-21_17-24-24/conf.yaml')
+    parser.add_argument('--checkpoint', type=str, default='/home/dawn/projects/ND-SDF/runs_pp_biasprior/scannetpp_degree_60_0e75f3c4d9_re/2024-11-21_17-24-24/checkpoints/latest.pth')
     parser.add_argument('--output_dir', type=str, default='./rendering_results')
     parser.add_argument('--downscale', type=int, default=1)
     parser.add_argument('--static', action='store_true', help='use static rendering')
@@ -56,10 +56,10 @@ if __name__=='__main__':
     valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=1, shuffle=False, num_workers=0, pin_memory=False)
     h,w=valid_dataset.h,valid_dataset.w
     for i,sample in enumerate(valid_loader):
-        if i<72:
-            continue
-        if i>72:
-            break
+        # if i<72:
+        #     continue
+        # if i>72:
+        #     break
         sample = {k: v.cuda() for k, v in sample.items()} # to gpu
         split_sample = utils.split_input(sample, valid_dataset.total_pixels, n_pixels=1024)
         outputs = []

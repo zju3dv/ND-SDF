@@ -41,9 +41,9 @@ def init_processes():
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--conf', type=str, default='/home/dawn/projects/ND-SDF/confs/scannet.yaml', help='conf')
-    parser.add_argument('--data_dir', type=str, default='', help='scan_id')
-    parser.add_argument('--scan_id', type=str, default='1', help='scan_id')
+    parser.add_argument('--conf', type=str, default='/home/dawn/projects/ND-SDF/confs/custom_object.yaml', help='conf')
+    parser.add_argument('--data_dir', type=str, default='/mnt/xishu/ND-SDF/data/tankandtemples/advanced', help='scan_id')
+    parser.add_argument('--scan_id', type=str, default='Ballroom', help='scan_id')
     parser.add_argument('--epoches', type=int, default=9999999999)
     parser.add_argument('--root_dir', type=str, default='runs', help='实验根目录')
     parser.add_argument('--is_continue', action='store_true', help='continue')
@@ -101,7 +101,7 @@ class Trainer():
             OmegaConf.save(self.conf, f)
 
         # dataset
-        self.train_dataset = BaseDataset(self.conf.dataset, split='train', num_rays=self.conf.train.num_rays, downscale=self.train_downscale, preload=True, custom_sampling=self.custom_sampling or self.dynamic_sampling, fewshot=getattr(self.conf.dataset, 'fewshot', False), fewshot_idx=getattr(self.conf.dataset, 'fewshot_idx', []))
+        self.train_dataset = BaseDataset(self.conf.dataset, split='train', num_rays=self.conf.train.num_rays, downscale=self.train_downscale, preload=False, custom_sampling=self.custom_sampling or self.dynamic_sampling, fewshot=getattr(self.conf.dataset, 'fewshot', False), fewshot_idx=getattr(self.conf.dataset, 'fewshot_idx', []))
         self.train_total_pixels, self.train_h, self.train_w = self.train_dataset.total_pixels, self.train_dataset.h, self.train_dataset.w
         self.valid_dataset = BaseDataset(self.conf.dataset, split='valid', num_rays=self.conf.train.num_rays, downscale=self.valid_downscale, preload=False, fewshot=getattr(self.conf.dataset, 'fewshot', False),fewshot_idx=getattr(self.conf.dataset, 'fewshot_idx',[]))
         self.valid_total_pixels, self.valid_h, self.valid_w = self.valid_dataset.total_pixels, self.valid_dataset.h, self.valid_dataset.w
@@ -398,7 +398,8 @@ class Trainer():
                 # backward
                 # start.record()
                 self.optimizer.zero_grad(set_to_none=True)
-                loss.backward()
+                if not output.get('ray_occ_false', False):
+                    loss.backward()
                 # restrict gradient
                 if self.grad_clip > 0:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)

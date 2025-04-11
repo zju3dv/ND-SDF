@@ -43,16 +43,17 @@ parser.add_argument('--split',type=str,default='test', choices=['test'])
 # choices of intermediate: ['Family', 'Francis', 'Horse', 'Lighthouse', 'M60', 'Panther', 'Playground', 'Train']
 # 2. train-split：training
 # choices of training：['Barn', 'Caterpillar', 'Church', 'Courthouse', 'Ignatius', 'MeetingRoom', 'Truck']
-parser.add_argument("--output_path", type=str, default='./test', help="path to output")
+parser.add_argument("--output_path", type=str, default='', help="path to output")
 parser.add_argument('--resize', action='store_true', help='if resize images')
 parser.add_argument("--h",  type=int, default=384, help="resize height")
 parser.add_argument("--w",  type=int, default=384, help="resize width")
-parser.add_argument("--radius", type=float, default=1.5, help="radius of the scene, or scene box bound of the scene")
+# radius: 'Auditorium': 4, 'Ballroom': 2.5, 'Courtroom': 1.5, 'Museum': 2, 'Palace': ?, 'Temple': ?
+parser.add_argument("--radius", type=float, default=2.5, help="radius of the scene, or scene box bound of the scene")
 parser.add_argument("--has_mono_depth", action='store_true', help="monocular depth prior ")
 parser.add_argument("--has_mono_normal", action='store_true', help="monocular normal prior")
 parser.add_argument("--has_mask", action='store_true', help="2d mask")
 parser.add_argument("--has_uncertainty", action='store_true', help="2d uncertainty")
-parser.set_defaults(resize=True, has_mono_depth=True, has_mono_normal=True, has_mask=False, has_uncertainty=False)
+parser.set_defaults(resize=False, has_mono_depth=True, has_mono_normal=True, has_mask=False, has_uncertainty=False)
 
 args = parser.parse_args()
 
@@ -77,7 +78,7 @@ output_path = args.output_path if args.output_path else input_path
 os.makedirs(output_path, exist_ok=True)
 
 # load scannet数据的sens结构color
-color_path = os.path.join(input_path, "images")
+color_path = os.path.join(input_path, "images_raw")
 color_paths = sorted(glob.glob(os.path.join(color_path, "*.jpg")), key=lambda x: int(os.path.basename(x)[:-4]))
 
 # load pose, intrinsic
@@ -89,11 +90,15 @@ for cam in cams:
     extrinsic = load_cam(cam)[0]
     intrinsic = load_cam(cam)[1]
     intrinsics.append(intrinsic)
-    poses.append(np.linalg.inv(extrinsic))
+    pose = np.linalg.inv(extrinsic)
+    poses.append(pose)
 poses = np.array(poses)
+certers = poses[:, :3, -1]
+certers_norm = np.linalg.norm(certers, axis=1)
+print('max center norm:', np.max(certers_norm))
+poses[:, :3, -1] = poses[:, :3, -1] / args.radius
 intrinsics = np.array(intrinsics)
-# tnt default无需scale, radius=1.5
-scale_mat = np.eye(4).astype(np.float32)
+scale_mat = np.eye(4).astype(np.float32) * args.radius
 
 # center crop by 2 * image_size
 offset_x = (W - int(w * min_ratio)) * 0.5

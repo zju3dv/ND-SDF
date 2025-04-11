@@ -134,7 +134,7 @@ id = args.id
 # data = mesh_path.split('/')[-1].split('.')[0].split('-')[-1]
 # data = '0e75f3c4d9'
 mesh = trimesh.load_mesh(mesh_path)
-meta = load_from_json(Path(f'{args.data_dir}/scan{id}/meta_data.json'))
+meta = load_from_json(Path(f'{args.data_dir}/{id}/meta_data.json'))
 worldtogt = np.array(meta['worldtogt'])
 # mesh.vertices = mesh.vertices / 0.8
 mesh.vertices = mesh.vertices
@@ -143,7 +143,7 @@ if not args.gt_space:
 # o3d.io.write_point_cloud(f'/mesh/pure-neus-reproduce-{data}.ply', mesh)
 # mesh.export(f'test.ply')
 
-gt_mesh = trimesh.load_mesh(f'{args.data_dir}/scan{id}/mesh_aligned_0.05.ply')
+gt_mesh = trimesh.load_mesh(f'{args.data_dir}/{id}/mesh_aligned_0.05.ply')
 bbox = gt_mesh.bounds
 vertices = np.asarray(mesh.vertices)
 mask = (vertices > bbox[0]).all(axis=1) & (vertices < bbox[1]).all(axis=1)

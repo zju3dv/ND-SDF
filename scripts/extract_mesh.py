@@ -47,7 +47,7 @@ if __name__=='__main__':
     mesh = my_extract_mesh(model.sdf.get_sdf,bounds,args.res,args.block_res,texture_func)
     # mesh = trimesh.load_mesh('/data/projects/implicit_reconstruction/scripts/tnt3_4_2048_latest.ply')
     if args.to_world:
-        conf.dataset.data_dir = '/data/monosdf/tnt_advanced' # tnt
+        # conf.dataset.data_dir = '/data/monosdf/tnt_advanced' # tnt
         #
         # conf.dataset.data_dir = '/data/scannetpp' # scannetpp
         # conf.dataset.scan_id = conf.dataset.scan_id.split('_')[0]

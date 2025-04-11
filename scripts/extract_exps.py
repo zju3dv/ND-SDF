@@ -12,13 +12,13 @@ import os, glob, omegaconf
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('--exps_dir', type=str, default='/home/dawn/projects/ND-SDF/runs_tnt_new')
+    parser.add_argument('--exps_dir', type=str, default='/home/dawn/projects/ND-SDF/runs_pp_biasprior')
     parser.add_argument('--to_world',action='store_true',help='transform to ground truth world coordinates')
     parser.add_argument('--res', type=int, default=512)
     parser.add_argument('--block_res', type=int ,default=512)
     parser.add_argument('--textured',action='store_true', help='extract textured mesh')
     parser.add_argument('--output_dir', type=str, default='.')
-    parser.set_defaults(to_world=True, textured=False)
+    parser.set_defaults(to_world=False, textured=False)
     args=parser.parse_args()
 
     exps_dir = args.exps_dir

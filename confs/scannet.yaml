@@ -1,3 +1,4 @@
+# active_step: 2500 is ok
 desc: ""
 train:
   exp_name: scannet

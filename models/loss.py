@@ -441,7 +441,7 @@ class ImplicitReconLoss(nn.Module):
         # Accumulate loss
         losses = {}
         # 1. eikonal_loss
-        loss_eik = eikonal_loss(output['gradient_eik'],mask=None)
+        loss_eik = eikonal_loss(output['gradient_eik'],mask=None) if output.get('gradient_eik', None) is not None else torch.tensor(0.0, device=mask.device)
         losses['eik'] = loss_eik
         loss= self.lambda_eik(prog) * loss_eik
         # 2. l1 rgb
@@ -471,7 +471,7 @@ class ImplicitReconLoss(nn.Module):
             loss += self.lambda_depth(prog) * loss_depth
             losses['depth'] = loss_depth
         # 7. curvature_loss
-        if self.lambda_curvature > 0:
+        if self.lambda_curvature > 0 and 'hessian' in output:
             loss_curvature = curvature_loss(output['hessian'], mask=None)
             loss += self.lambda_curvature * loss_curvature
             losses['curvature'] = loss_curvature

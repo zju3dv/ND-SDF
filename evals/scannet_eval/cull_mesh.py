@@ -173,15 +173,15 @@ def main(args):
 
     # save mesh
     os.makedirs(args.out_dir,exist_ok=True)
-    out_mesh_path = os.path.join(args.out_dir, os.path.basename(args.mesh).split('.')[0]+'_deb.ply')
+    out_mesh_path = os.path.join(args.out_dir, os.path.basename(args.mesh).split('.')[0]+'_culled.ply')
     mesh.export(out_mesh_path)
 
 if __name__=='__main__':
 
     args=argparse.ArgumentParser()
-    args.add_argument('--mesh', type=str, default='/data/ICLR/ND-SDF/Figures/scannet_rebuttal/0580/new_mesh/scannet_omni_384-21-2_3_mesh_1009.ply')
+    args.add_argument('--mesh', type=str, default='/data/ICLR/ND-SDF/Figures/scannet_rebuttal/0084/newmesh/scannet_omni_384-21-14_2_mesh_2449.ply')
     args.add_argument('--data_dir',type=str, default='/data/monosdf/scannet')
-    args.add_argument('--scan_id', type=str, default='3')
+    args.add_argument('--scan_id', type=str, default='2')
     args.add_argument('--apply_mask',action='store_true', help='是否仅保留data mask内的网格')
     args.add_argument('--gt_space',action='store_true',help='输入mesh是否在gt space, 该脚本文件保证输出为gt_space')
     args.add_argument('--exp_name', type=str, default='scannet_normal_bg2-2')

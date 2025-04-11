@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Black">
-    <option name="sdkName" value="gaussian_splatting" />
+    <option name="sdkName" value="ndsdf" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="ndsdf" project-jdk-type="Python SDK" />
 </project>

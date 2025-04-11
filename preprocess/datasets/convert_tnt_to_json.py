@@ -296,7 +296,10 @@ def init_colmap(args):
     scene_list = os.listdir(args.tnt_path)
 
     for scene in scene_list:
-        if scene!=args.scene and scene != 'All':
+        if scene!=args.scene and args.scene != 'All':
+            continue
+        # Church图像集和pose文件数量不匹配，跳过Church
+        if scene in ['Truck', 'Barn', 'Caterpillar', 'Ignatius', 'Church']:
             continue
         scene_path = os.path.join(args.tnt_path, scene)
 
@@ -369,8 +372,8 @@ def init_colmap(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--tnt_path', type=str, default='/data/tankandtemples/training', help='Path to tanks and temples dataset')
-    parser.add_argument('--scene', type=str, default='Truck',
+    parser.add_argument('--tnt_path', type=str, default='/mnt/xishu/ND-SDF/data/tankandtemples/training', help='Path to tanks and temples dataset')
+    parser.add_argument('--scene', type=str, default='All',
                         choices=['Barn', 'Caterpillar', 'Church', 'Courthouse', 'Ignatius', 'MeetingRoom','Truck', 'All'])  # training
     parser.add_argument('--split', type=str, default='train', choices=['train'])
     # 1. test-split: advanced, intermediate,
